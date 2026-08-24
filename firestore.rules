@@ -1,0 +1,87 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function myRole() {
+      // Reads the caller's own users/{uid}.role. Used to gate admin-only actions.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && myRole() == 'admin';
+    }
+
+    // ---- users/{uid} ----
+    // A profile doc for every account. Anyone signed in can read (needed to
+    // show worker names on bookings); a user can only create/update their OWN
+    // doc, and can never set their own role to "admin" — that must be done
+    // manually by you in the Firebase console, which is the intended
+    // approval gate described in the README.
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid)
+                    && request.resource.data.role in ['worker', 'employer']
+                    && request.resource.data.uid == uid;
+      allow update: if (isOwner(uid) && request.resource.data.role == resource.data.role)
+                    || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---- workerProfiles/{uid} ----
+    // Public directory data — anyone can browse (even signed-out visitors),
+    // but only the worker who owns the profile (or an admin) can write it.
+    match /workerProfiles/{uid} {
+      allow read: if true;
+      allow create, update: if isOwner(uid);
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // ---- bookings/{bookingId} ----
+    // Only the two parties involved (or an admin) can see a booking.
+    // Creation is restricted to employers, for themselves, in "pending" state.
+    // Status transitions are restricted to who's allowed to make them:
+    //   worker: pending -> accepted | rejected ; accepted -> completed
+    //   employer: pending | accepted -> cancelled
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() &&
+                  (request.auth.uid == resource.data.employerId ||
+                   request.auth.uid == resource.data.workerId ||
+                   isAdmin());
+
+      allow create: if isSignedIn()
+                    && request.resource.data.employerId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      allow update: if isAdmin() || (
+        isSignedIn() &&
+        (request.auth.uid == resource.data.workerId || request.auth.uid == resource.data.employerId) &&
+        // Only the status field may change on an update — everything else
+        // (dates, address, who's involved) is immutable after creation.
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+        (
+          (request.auth.uid == resource.data.workerId &&
+            (
+              (resource.data.status == 'pending' && request.resource.data.status in ['accepted', 'rejected']) ||
+              (resource.data.status == 'accepted' && request.resource.data.status == 'completed')
+            )
+          ) ||
+          (request.auth.uid == resource.data.employerId &&
+            resource.data.status in ['pending', 'accepted'] &&
+            request.resource.data.status == 'cancelled'
+          )
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+  }
+}

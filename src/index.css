@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Color system — job-ticket / work-order palette, dark reskin */
+  --color-ink: #f2ede0;
+  --color-ink-soft: #b9b29c;
+  --color-paper: #15191a;
+  --color-paper-dim: #1e2422;
+  --color-safety: #f2a63d;
+  --color-safety-dark: #e6a944;
+  --color-site-orange: #ff7043;
+  --color-trust: #3fae9e;
+  --color-trust-light: #63c9ba;
+  --color-danger: #e2573c;
+  --color-line: #33372f;
+
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ticket / work-order card texture: dashed perforation on top edge */
+.ticket-edge {
+  position: relative;
+}
+.ticket-edge::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right, var(--color-line) 0, var(--color-line) 6px, transparent 6px, transparent 12px);
+}
+
+/* Signature element: rotated ink-stamp status badge */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3em 0.7em;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  transform: rotate(-2deg);
+  position: relative;
+}
+.stamp::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.stamp-pending { color: var(--color-safety-dark); background: color-mix(in srgb, var(--color-safety) 18%, transparent); }
+.stamp-accepted { color: var(--color-trust); background: color-mix(in srgb, var(--color-trust) 18%, transparent); }
+.stamp-rejected { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 18%, transparent); }
+.stamp-completed { color: var(--color-ink-soft); background: color-mix(in srgb, var(--color-ink) 10%, transparent); }
+.stamp-cancelled { color: var(--color-ink-soft); background: transparent; }
+
+:focus-visible {
+  outline: 2px solid var(--color-safety-dark);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
