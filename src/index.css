@@ -85,3 +85,22 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* Form fields: keep typed text readable on the dark theme */
+input,
+select,
+textarea {
+  color-scheme: dark;
+  caret-color: var(--color-ink);
+}
+
+/* Browser autofill paints its own background; keep it matching the theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-ink);
+  caret-color: var(--color-ink);
+  box-shadow: 0 0 0 1000px var(--color-paper-dim) inset;
+  transition: background-color 9999s ease-out 0s;
+}
