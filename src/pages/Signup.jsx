@@ -183,7 +183,7 @@ function Field({ label, error, children }) {
 }
 
 function inputClass(error) {
-  return `w-full border-2 rounded-md px-3 py-2.5 bg-white focus:outline-none transition-colors ${
+  return `w-full border-2 rounded-md px-3 py-2.5 bg-paper-dim text-ink placeholder:text-ink-soft focus:outline-none transition-colors ${
     error ? 'border-danger' : 'border-line focus:border-ink'
   }`
 }
